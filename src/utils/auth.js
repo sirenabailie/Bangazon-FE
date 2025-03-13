@@ -1,49 +1,74 @@
-import { firebase } from "@/utils/client"; // ✅ Ensure firebase is from client.js
-import "firebase/auth";
+import firebase from 'firebase/app';
+import 'firebase/auth';
+import { clientCredentials } from './client';
 
-const signIn = async () => {
-  const provider = new firebase.auth.GoogleAuthProvider();
+const endpoint = clientCredentials.databaseURL;
 
+const checkUser = async (uid) => {
   try {
-    const result = await firebase.auth().signInWithPopup(provider);
-    const {user} = result;
+    const response = await fetch(`${endpoint}/api/checkuser/${uid}`, {  // ✅ Fix URL
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    });
 
-    // Store user details in localStorage
-    localStorage.setItem(
-      "firebaseUser",
-      JSON.stringify({
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-      }),
-    );
-
-    console.log("User signed in:", user);
-
-    // 🔹 Check if user exists in the backend
-    const response = await fetch(`http://localhost:5283/api/users/${user.uid}`);
-
-    if (response.status === 404) {
-      console.log("User not found, redirecting to /register");
-      window.location.href = "/register"; // Redirect to registration
-    } else {
-      console.log("User exists, redirecting to home page");
-      window.location.href = "/"; // Redirect to home (page.js)
+    if (!response.ok) {
+      if (response.status === 404) {
+        return {}; // ✅ Return empty object instead of null
+      }
+      throw new Error(`API Error: ${response.statusText}`);
     }
+
+    return await response.json();
   } catch (error) {
-    console.error("Google Sign-In Error:", error);
+    console.error('Error checking user:', error);
+    return {}; // ✅ Ensure a valid return type
   }
 };
 
-const signOutUser = async () => {
+
+const registerUser = async (userInfo) => {
   try {
-    await firebase.auth().signOut();
-    localStorage.removeItem("firebaseUser"); // Clear stored user data
-    window.location.href = "/"; // Redirect to home page
+    console.log("📡 Sending Registration Request:", JSON.stringify(userInfo, null, 2));
+
+    const response = await fetch(`${endpoint}/api/users/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(userInfo),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text(); // ✅ Read error message
+      throw new Error(`API Error: ${response.status} - ${errorText}`);
+    }
+
+    console.log("✅ Registration Successful");
+    return await response.json();
   } catch (error) {
-    console.error("Sign Out Error:", error);
+    console.error("❌ Error registering user:", error.message);
+    throw error;
   }
 };
 
-export { signIn, signOutUser };
+
+
+const signIn = () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider);
+};
+
+const signOut = () => {
+  firebase.auth().signOut();
+};
+
+export {
+  signIn, //
+  signOut,
+  checkUser,
+  registerUser,
+};
