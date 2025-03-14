@@ -62,6 +62,7 @@ const signIn = () => {
   firebase.auth().signInWithPopup(provider);
 };
 
+
 const signOut = () => {
   firebase.auth().signOut();
 };

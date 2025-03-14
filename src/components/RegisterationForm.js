@@ -1,17 +1,20 @@
 'use client';
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { registerUser } from "@/api/users"; // ✅ Fixed import path
+import { useAuth } from "@/utils/context/authContext"; // ✅ Import AuthContext
+import { registerUser } from "@/api/users"; // ✅ Import API function
 
 export default function Register() {
   const router = useRouter();
+  const { updateUser } = useAuth(); // ✅ Only import `updateUser` since `user` is unused
 
   // ✅ Load Firebase user details from localStorage
   const firebaseUser = JSON.parse(localStorage.getItem("firebaseUser")) || {};
 
   // ✅ State for form values
-  const [values, setValues] = useState({
+  const [formData, setFormData] = useState({
+    uid: firebaseUser.uid || "",
     firstName: "",
     lastName: "",
     address: "",
@@ -20,146 +23,90 @@ export default function Register() {
     isSeller: false,
     email: firebaseUser.email || "", // ✅ Auto-filled from Google Auth
     image: firebaseUser.photoURL || "", // ✅ Auto-filled profile picture
-    uid: firebaseUser.uid || "", // ✅ Auto-filled Firebase UID
   });
 
-  const [errorMessage, setErrorMessage] = useState(null); // ✅ Renamed to avoid shadowing
+  const [errorMessage, setErrorMessage] = useState(null);
 
   // ✅ Handle input changes
-  const handleInputChange = (event) => {
-    event.preventDefault();
-    const { name, value, type, checked } = event.target;
-
-    setValues((prevValues) => ({
-      ...prevValues,
-      [name]: type === "checkbox" ? checked : value,
+  const handleInputChange = ({ target }) => {
+    setFormData((prev) => ({
+      ...prev,
+      [target.name]: target.type === "checkbox" ? target.checked : target.value,
     }));
   };
 
-  // ✅ Form Submission
+  // ✅ Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage(null); // ✅ Clear previous errors
-  
+    setErrorMessage(null);
+
     // ✅ Validate required fields
-    if (!values.firstName || !values.lastName || !values.address || !values.city || !values.zip) {
+    if (!formData.firstName || !formData.lastName || !formData.address || !formData.city || !formData.zip) {
       setErrorMessage("All fields are required.");
       return;
     }
-  
+
     // ✅ Convert `zip` to an integer
-    const userPayload = {
-      ...values,
-      zip: parseInt(values.zip, 10),
-    };
-  
+    const userPayload = { ...formData, zip: parseInt(formData.zip, 10) };
+
     console.log("📡 Sending Registration Data:", userPayload);
-  
+
     try {
-      const result = await registerUser(userPayload);
-      console.log("✅ User registered successfully!", result);
-  
-      // ✅ Ensure state updates before redirect
-      setTimeout(() => {
-        router.push("/");
-      }, 500); // ✅ Adding slight delay for safety
+      await registerUser(userPayload); // ✅ Register user in backend
+      console.log("✅ User registered successfully!");
+
+      // ✅ Update user in AuthContext
+      updateUser(userPayload.uid);
+
+      // ✅ Redirect to home page after a slight delay
+      setTimeout(() => router.push("/"), 500);
     } catch (err) {
       console.error("❌ Registration failed:", err);
       setErrorMessage("Registration failed. Please try again.");
     }
   };
-  
-  
 
   return (
     <div className="form-container">
       <form className="register-form" onSubmit={handleSubmit}>
         <h2>Register</h2>
 
-        {errorMessage && <p className="error-message">{errorMessage}</p>} {/* ✅ Fixed variable */}
+        {errorMessage && <p className="error-message">{errorMessage}</p>}
 
-        <input
-          className="form-field"
-          type="text"
-          placeholder="First Name"
-          name="firstName"
-          value={values.firstName}
-          onChange={handleInputChange}
-          required
-        />
+        <label htmlFor="firstName">First Name</label>
+        <input type="text" id="firstName" name="firstName" required onChange={handleInputChange} />
 
-        <input
-          className="form-field"
-          type="text"
-          placeholder="Last Name"
-          name="lastName"
-          value={values.lastName}
-          onChange={handleInputChange}
-          required
-        />
+        <label htmlFor="lastName">Last Name</label>
+        <input type="text" id="lastName" name="lastName" required onChange={handleInputChange} />
 
-        <input
-          className="form-field"
-          type="text"
-          placeholder="Address"
-          name="address"
-          value={values.address}
-          onChange={handleInputChange}
-          required
-        />
+        <label htmlFor="address">Address</label>
+        <input type="text" id="address" name="address" required onChange={handleInputChange} />
 
-        <input
-          className="form-field"
-          type="text"
-          placeholder="City"
-          name="city"
-          value={values.city}
-          onChange={handleInputChange}
-          required
-        />
+        <label htmlFor="city">City</label>
+        <input type="text" id="city" name="city" required onChange={handleInputChange} />
 
-        <input
-          className="form-field"
-          type="number"
-          placeholder="Zip Code"
-          name="zip"
-          value={values.zip}
-          onChange={handleInputChange}
-          required
-        />
+        <label htmlFor="zip">Zip Code</label>
+        <input type="number" id="zip" name="zip" required onChange={handleInputChange} />
 
         {/* ✅ Email is now auto-filled from Google Auth */}
-        <input
-          className="form-field"
-          type="email"
-          name="email"
-          value={values.email}
-          readOnly
-          disabled
-        />
+        <label htmlFor="email">Email</label>
+        <input type="email" id="email" name="email" value={formData.email} readOnly disabled />
 
         {/* ✅ Profile Image Preview */}
         <div className="profile-preview">
           <img
-            src={values.image || "https://via.placeholder.com/150"}
+            src={formData.image || "https://via.placeholder.com/150"}
             alt="Profile"
             style={{ width: "100px", height: "100px", borderRadius: "50%" }}
           />
         </div>
 
-        <label>
-          <input
-            type="checkbox"
-            name="isSeller"
-            checked={values.isSeller}
-            onChange={handleInputChange}
-          />
-          Are you registering as a seller?
+        <label htmlFor="isSeller">
+          <input type="checkbox" id="isSeller" name="isSeller" checked={formData.isSeller} onChange={handleInputChange} />
+          Registering as a seller?
         </label>
 
-        <button className="form-field" type="submit">
-          Register
-        </button>
+        <button type="submit">Register</button>
       </form>
     </div>
   );
