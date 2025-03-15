@@ -8,19 +8,21 @@ AuthContext.displayName = 'AuthContext';
 function AuthProvider(props) {
   const [user, setUser] = useState(null);
   const [oAuthUser, setOAuthUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true); // ✅ Add explicit loading state
 
-  // ✅ Properly handles updating user data
   const updateUser = async (uid) => {
     try {
+      setUserLoading(true); // ✅ Start loading while updating user
       const gamerInfo = await checkUser(uid);
       setUser({ fbUser: oAuthUser, ...gamerInfo });
     } catch (error) {
       console.error('Error updating user:', error);
+    } finally {
+      setUserLoading(false); // ✅ Ensure loading state is set to false
     }
   };
 
   useEffect(() => {
-    // ✅ Firebase Auth Listener (with cleanup)
     const unsubscribe = firebase.auth().onAuthStateChanged(async (fbUser) => {
       if (fbUser) {
         setOAuthUser(fbUser);
@@ -35,31 +37,30 @@ function AuthProvider(props) {
         setOAuthUser(false);
         setUser(false);
       }
+      setUserLoading(false); // ✅ Ensure loading state is updated
     });
 
-    return () => unsubscribe(); // ✅ Cleanup function for the listener
+    return () => unsubscribe();
   }, []);
 
   const value = useMemo(
     () => ({
       user,
       updateUser,
-      userLoading: user === null || oAuthUser === null,
+      userLoading, // ✅ Ensure this is exposed correctly
     }),
-    [user, oAuthUser],
+    [user, userLoading],
   );
 
   return <AuthContext.Provider value={value} {...props} />;
 }
 
-const AuthConsumer = AuthContext.Consumer;
-
 const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
-export { AuthProvider, useAuth, AuthConsumer };
+export { AuthProvider, useAuth };
