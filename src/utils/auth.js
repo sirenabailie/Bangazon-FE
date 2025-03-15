@@ -6,7 +6,7 @@ const endpoint = clientCredentials.databaseURL;
 
 const checkUser = async (uid) => {
   try {
-    const response = await fetch(`${endpoint}/api/checkuser/${uid}`, {  // ✅ Fix URL
+    const response = await fetch(`${endpoint}/api/checkuser/${uid}`, {  
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -16,7 +16,7 @@ const checkUser = async (uid) => {
 
     if (!response.ok) {
       if (response.status === 404) {
-        return {}; // ✅ Return empty object instead of null
+        return {}; // return empty object instead of null
       }
       throw new Error(`API Error: ${response.statusText}`);
     }
@@ -24,7 +24,7 @@ const checkUser = async (uid) => {
     return await response.json();
   } catch (error) {
     console.error('Error checking user:', error);
-    return {}; // ✅ Ensure a valid return type
+    return {}; // return valid return type
   }
 };
 
@@ -43,7 +43,7 @@ const registerUser = async (userInfo) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text(); // ✅ Read error message
+      const errorText = await response.text(); // Read error message
       throw new Error(`API Error: ${response.status} - ${errorText}`);
     }
 

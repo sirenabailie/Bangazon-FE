@@ -11,7 +11,7 @@ export default function ProductCard({ productObj }) {
         variant="top"
         src={productObj.image}
         alt={productObj.name}
-        style={{ height: "200px", objectFit: "cover" }} // ✅ Keeps images uniform
+        style={{ height: "200px", objectFit: "cover" }} 
       />
       <Card.Body>
         <Card.Title>{productObj.name}</Card.Title>
