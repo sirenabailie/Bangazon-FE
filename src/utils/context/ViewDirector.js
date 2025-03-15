@@ -8,8 +8,9 @@ import Register from '../../components/RegisterationForm';
 import { checkUser } from '../auth';
 
 function ViewDirectorBasedOnUserAuthStatus({ children }) {
-  const [userExists, setUserExists] = useState(null); // ✅ Track if user exists in DB
   const { user, userLoading, updateUser } = useAuth();
+  const [userExists, setUserExists] = useState(null); // ✅ Track if user exists in DB
+  const [loadingUserCheck, setLoadingUserCheck] = useState(true); // ✅ Track backend user check
 
   useEffect(() => {
     const verifyUser = async () => {
@@ -19,12 +20,16 @@ function ViewDirectorBasedOnUserAuthStatus({ children }) {
           const existingUser = await checkUser(user.uid);
           console.log("✅ User exists check result:", existingUser);
 
-          // ✅ If user exists, set to true; otherwise, set to false
+          // ✅ If user exists, set state accordingly
           setUserExists(existingUser.exists);
         } catch (error) {
           console.error("❌ Error checking user existence:", error);
           setUserExists(false);
+        } finally {
+          setLoadingUserCheck(false); // ✅ Ensure loading is set to false
         }
+      } else {
+        setLoadingUserCheck(false); // ✅ Avoid getting stuck
       }
     };
 
@@ -32,7 +37,7 @@ function ViewDirectorBasedOnUserAuthStatus({ children }) {
   }, [user]);
 
   // ✅ Show loading screen while checking authentication
-  if (userLoading || userExists === null) {
+  if (userLoading || loadingUserCheck) {
     return <Loading />;
   }
 
