@@ -21,8 +21,8 @@ export default function Register() {
     city: "",
     zip: "",
     isSeller: false,
-    email: firebaseUser.email || "", // ✅ Auto-filled from Google Auth
-    image: firebaseUser.photoURL || "", // ✅ Auto-filled profile picture
+    email: firebaseUser.email || "", 
+    image: firebaseUser.photoURL || "", 
   });
 
   const [errorMessage, setErrorMessage] = useState(null);

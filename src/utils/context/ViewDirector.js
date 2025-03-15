@@ -36,28 +36,28 @@ function ViewDirectorBasedOnUserAuthStatus({ children }) {
     verifyUser();
   }, [user]);
 
-  // ✅ Show loading screen while checking authentication
+  // Show loading screen while checking authentication
   if (userLoading || loadingUserCheck) {
     return <Loading />;
   }
 
-  // ✅ If no user is logged in, show sign-in page
+  // If no user is logged in, show sign-in page
   if (!user) {
     return <SignIn />;
   }
 
-  // ✅ If user is authenticated but NOT in DB, show registration form
+  // If user is authenticated but NOT in DB, show registration form
   if (user && !userExists) {
     console.log("🚨 New user detected. Showing registration form.");
     return <Register user={user} updateUser={updateUser} />;
   }
 
-  // ✅ If user is authenticated AND in DB, show home page
+  // If user is authenticated AND in DB, show home page
   console.log("✅ Existing user. Loading home page.");
   return (
     <>
       <NavBar />
-      {children} {/* ✅ Ensure pages render below the navbar */}
+      {children}
     </>
   );
 }

@@ -8,17 +8,17 @@ AuthContext.displayName = 'AuthContext';
 function AuthProvider(props) {
   const [user, setUser] = useState(null);
   const [oAuthUser, setOAuthUser] = useState(null);
-  const [userLoading, setUserLoading] = useState(true); // ✅ Add explicit loading state
+  const [userLoading, setUserLoading] = useState(true); // Add explicit loading state
 
   const updateUser = async (uid) => {
     try {
-      setUserLoading(true); // ✅ Start loading while updating user
+      setUserLoading(true); // Start loading while updating user
       const gamerInfo = await checkUser(uid);
       setUser({ fbUser: oAuthUser, ...gamerInfo });
     } catch (error) {
       console.error('Error updating user:', error);
     } finally {
-      setUserLoading(false); // ✅ Ensure loading state is set to false
+      setUserLoading(false); // loading state is set to false
     }
   };
 
@@ -37,7 +37,7 @@ function AuthProvider(props) {
         setOAuthUser(false);
         setUser(false);
       }
-      setUserLoading(false); // ✅ Ensure loading state is updated
+      setUserLoading(false); // loading state is updated
     });
 
     return () => unsubscribe();
@@ -47,7 +47,7 @@ function AuthProvider(props) {
     () => ({
       user,
       updateUser,
-      userLoading, // ✅ Ensure this is exposed correctly
+      userLoading, 
     }),
     [user, userLoading],
   );
